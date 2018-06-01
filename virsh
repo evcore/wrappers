@@ -1,0 +1,33 @@
+#!/bin/bash
+#
+# File: /usr/local/bin/virsh
+# Author: Evert
+# Function: virsh wrapper
+#   - workaround for virsh resume to resync the guest system time after virsh suspend
+#   - workaround for virsh console which leaves an invalid terminal size behind
+# See also: /usr/local/bin/forget_wrapper_path
+
+source forget_wrapper_path  # enable the original command (not this wrapper)
+action="$1"
+case "$action" in
+    resume)
+        shift
+        virsh resume "$@" &&
+            exec virsh domtime --sync "$@" |sed -e '/^$/d'
+        ;;
+    console)
+        # separate action to fix terminal afterwards
+        virsh "$@"
+        # restore terminal size which virsh console incorrectly leaves behind
+        type -P resize >/dev/null &&
+            resize >/dev/null  # ignore COLUMNS/LINES output (package: xterm)
+        ;;
+    *)
+        exec virsh "$@"
+        ;;
+esac
+
+# https://serverfault.com/questions/334698/how-to-keep-time-on-resumed-kvm-guest-with-libvirt
+# https://serverfault.com/questions/132197/best-practice-for-system-clock-sync-on-kvm-host
+# cat /sys/devices/system/clocksource/clocksource0/current_clocksource    # kvm-clock
+# cat /sys/devices/system/clocksource/clocksource0/available_clocksource  # kvm-clock tsc acpi_pm

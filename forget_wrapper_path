@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 # File: /usr/local/bin/forget_wrapper_path
+# Author: Evert
 # Function:
 #   Allow wrapper scripts to have the same name as the original command
 #   without the need to use the full path to the original command in the
@@ -8,7 +9,7 @@
 # Note: the wrapper may
 #   - be in $PATH e.g. /usr/local/bin/
 #   - have the same name as the original command 
-#   - be a symlink (as long as its dirname isn't)
+#   - be a symlink (as long as its dirname e.g. /usr/local/bin/ isn't)
 # Usage:
 #   source forget_wrapper_path  # when this function is not in the wrapper
 #   forget_wrapper_path    # when this function is included in the wrapper
