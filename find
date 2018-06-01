@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Function: find wrapper - add functionality to find on disk only using:
+#     find [-opts] -disk [...]
+# See also: /usr/local/bin/remove_wrapper_path
+
+set -e  # exit on any failure
+source forget_wrapper_path  # enable the original command (not this wrapper)
+
+get_disk_mountpoints () {
+    # determine disk filesystem types: ext3,ext4,ext2,fuseblk
+    local disk_fstypes=$(sed -nre '/^nodev|iso9660/d' -e 's,^\s+,,p' /proc/filesystems |paste -sd,)
+    # get disk mountpoints using $disk_fstypes: / /boot /data ...
+    # Notes:
+    #   -t|--types       fstypes: ext2,ext3,ext4,xfs,fuseblk
+    #   -O|--options     mount-options: ro
+    #   -o|--output      output fields:TARGET,SOURCE
+    #   -n|--noheadings  no fields header
+    #   -r|--raw         disable fancy gui tree output chars in TARGET field
+    #   bind mounts display SOURCE as dev[orig_mountpoint] - suppressed using awk
+    disk_mountpoints=($(findmnt --types $disk_fstypes --options rw --output \
+        TARGET,SOURCE --noheadings --raw |awk '!/]$/ {print $1}' |sort))
+    disk_mountpoints+=(-mount)  # additional option needed for find [-opts] -disk [...]
+}
+
+parse_args () {
+    pre_opts=()           # init - make sure empty
+    disk_mountpoints=()   # init - make sure empty
+    local arg
+    for arg in "$@"; do
+        case "$arg" in
+            -disk)
+                shift
+                get_disk_mountpoints  # find [-opts] -disk [...] - wrapper extension
+                break
+                ;;
+            -*)
+                shift
+                pre_opts+=("$arg")  # example: find -L ...
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+    args=("$@")  # remaining args
+}
+
+parse_args "$@"
+#set -x  # debug final cmdline
+exec find "${pre_opts[@]}" "${disk_mountpoints[@]}" "${args[@]}"

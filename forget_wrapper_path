@@ -1,0 +1,34 @@
+#!/bin/bash
+#
+# File: /usr/local/bin/forget_wrapper_path
+# Function:
+#   Allow wrapper scripts to have the same name as the original command
+#   without the need to use the full path to the original command in the
+#   wrapper.
+# Note: the wrapper may
+#   - be in $PATH e.g. /usr/local/bin/
+#   - have the same name as the original command 
+#   - be a symlink (as long as its dirname isn't)
+# Usage:
+#   source forget_wrapper_path  # when this function is not in the wrapper
+#   forget_wrapper_path    # when this function is included in the wrapper
+
+forget_wrapper_path () {
+    # enable calling the original command (not the wrapper again) without the need
+    # to specify its full path by removing the path to the wrapper from $PATH
+    # Note: the wrapper itself may be a symlink as long as the directory isn't
+    local cmd wrapper_dir wrapper_path orig_cmd_path
+    cmd=$(basename "${BASH_SOURCE[-1]}")
+    wrapper_dir=$(dirname "${BASH_SOURCE[-1]}" |xargs -rd\\n readlink -f)
+    wrapper_path="$wrapper_dir/$cmd"
+    if orig_cmd_path=$(type -aP "$cmd" |LC_CTYPE=C grep -v "^$wrapper_path$" -m1); then
+        # forget the wrapper - force the use of the original command
+        hash -p "$orig_cmd_path" "$cmd"
+    else
+        # fallback: remove wrapper dir from $PATH
+        PATH=$(echo "$PATH" | sed -re "s,(^|:)$wrapper_dir:,\1,g")
+    fi
+}
+
+forget_wrapper_path
+unset forget_wrapper_path
