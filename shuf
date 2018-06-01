@@ -1,0 +1,11 @@
+#!/bin/bash
+#
+# File: /usr/local/bin/shuf
+# Author: Evert
+# Function: shuf wrapper
+#   - use /dev/urandom as random source per default
+# See also: /usr/local/bin/forget_wrapper_path
+
+set -e  # exit on any failure
+source forget_wrapper_path
+exec shuf --random-source=/dev/urandom "$@"
