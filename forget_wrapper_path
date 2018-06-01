@@ -6,10 +6,10 @@
 #   Allow wrapper scripts to have the same name as the original command
 #   without the need to use the full path to the original command in the
 #   wrapper.
-# Note: the wrapper may
-#   - be in $PATH e.g. /usr/local/bin/
-#   - have the same name as the original command 
-#   - be a symlink (as long as its dirname e.g. /usr/local/bin/ isn't)
+# Note: the wrapper
+#   - should be in $PATH e.g. /usr/local/bin/
+#   - may have the same name as the original command 
+#   - may be a symlink (as long as its dirname e.g. /usr/local/bin/ isn't)
 # Usage:
 #   source forget_wrapper_path  # when this function is not in the wrapper
 #   forget_wrapper_path    # when this function is included in the wrapper
@@ -25,10 +25,11 @@ forget_wrapper_path () {
         # forget the wrapper - force the use of the original command
         hash -p "$orig_cmd_path" "$cmd"
     else
-        # fallback: remove wrapper dir from $PATH
+        # fallback: remove the wrapper dir from $PATH
+        # - you don't want to call the wrapper again, do you?
         PATH=$(echo "$PATH" | sed -re "s,(^|:)$wrapper_dir:,\1,g")
     fi
 }
 
 forget_wrapper_path
-unset forget_wrapper_path
+unset -f forget_wrapper_path  # function needed only once
