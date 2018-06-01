@@ -15,9 +15,8 @@
 #   forget_wrapper_path    # when this function is included in the wrapper
 
 forget_wrapper_path () {
-    # enable calling the original command (not the wrapper again) without the need
-    # to specify its full path by removing the path to the wrapper from $PATH
-    # Note: the wrapper itself may be a symlink as long as the directory isn't
+    # forget the called wrapper - enable calling the original command without
+    # the need to specify its full path
     local cmd wrapper_dir wrapper_path orig_cmd_path
     cmd=$(basename "${BASH_SOURCE[-1]}")
     wrapper_dir=$(dirname "${BASH_SOURCE[-1]}" |xargs -rd\\n readlink -f)
