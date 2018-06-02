@@ -42,3 +42,14 @@ Other than that, this wrapper also fixes the terminal size after a
 virsh console
 ```
 but **_only_** if the *xterm* package has been installed.
+
+
+
+### shuf
+shuf uses an internal pseudo-random generator per default. I don't like that
+and want to use /dev/urandom per default without having to type
+```
+some command | shuf --random-source=/dev/urandom
+```
+any time. Of course you can make an alias of function to accomplish this, but
+this wrapper is so much easier and works every time.
