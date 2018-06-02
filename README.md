@@ -51,5 +51,5 @@ and want to use /dev/urandom per default without having to type
 ```
 some command | shuf --random-source=/dev/urandom
 ```
-any time. Of course you can make an alias of function to accomplish this, but
-this wrapper is so much easier and works every time.
+any time. Of course you can make an alias or function to accomplish this, but
+this wrapper makes it so much easier and works every time.
