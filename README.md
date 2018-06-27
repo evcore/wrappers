@@ -31,7 +31,7 @@ $ find -disk -cmin -5
 Did you ever do?
 ```
 virsh suspend ...
-... and some time later ...
+# ... and some time later ...
 virsh resume ...
 ```
 If yes, did you notice, the time on the guest wasn't up2date anymore?  
@@ -39,14 +39,14 @@ Well, I did, and my "virsh" wrapper fixes this issue.
 
 Other than that, this wrapper also fixes the terminal size after a
 ```
-virsh console
+virsh console ...
 ```
 but **_only_** if the *xterm* package has been installed. 
 
-I also created aliases which also support the --all option, so now you can
+I also created aliases including the --all option, so now you can
 ```
-virsh suspend|pause|stop [-all] ...
-virsh resume|cont|continue [-all] ...
+virsh suspend|pause|stop [-all] [...]
+virsh resume|cont|continue [-all] [...]
 ```
 
 
