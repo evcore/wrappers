@@ -18,7 +18,7 @@ to find out what changed on disk in the last few minutes?
 After puzzling a bit, you probably ended up using commands like:
 ```
 $ arbitrary_command
-$ find / -cmin -5 2>/dev/null |grep -Ev '^/(proc|sys|run)'
+$ find / -cmin -5 2>/dev/null | grep -Ev '^/(proc|sys|run)'
 ```
 Well, using my "find" wrapper, you can now simply accomplish this using:
 ```
@@ -27,12 +27,12 @@ $ find -disk -cmin -5
 ```
 
 
-### virsh resume|console
+### virsh suspend|resume|console
 Did you ever do?
 ```
-virsh suspend
+virsh suspend ...
 ... and some time later ...
-virsh resume
+virsh resume ...
 ```
 If yes, did you notice, the time on the guest wasn't up2date anymore?  
 Well, I did, and my "virsh" wrapper fixes this issue.  
@@ -41,7 +41,13 @@ Other than that, this wrapper also fixes the terminal size after a
 ```
 virsh console
 ```
-but **_only_** if the *xterm* package has been installed.
+but **_only_** if the *xterm* package has been installed. 
+
+I also created aliases which also support the --all option, so now you can
+```
+virsh suspend|pause|stop [-all] ...
+virsh resume|cont|continue [-all] ...
+```
 
 
 

@@ -2,28 +2,78 @@
 #
 # File: /usr/local/bin/virsh
 # Author: Evert
-# Function: virsh wrapper
-#   - workaround for virsh resume to resync the guest system time after virsh suspend
-#   - workaround for virsh console which leaves an invalid terminal size behind
+# Function: virsh wrapper - extended functionality
+#   - resync the guest system time after virsh suspend/resume
+#   - restore terminal size after virsh console
+#   - aliases for suspend & resume: pause|stop & cont|continue
+#   - support virsh suspend|resume --all
 # See also: /usr/local/bin/forget_wrapper_path
 
+#echo ">>> $0 $*" >&2  # debug - show bash-completion calls ;-)
 source forget_wrapper_path  # enable the original command (not this wrapper)
-action="$1"
+
+declare -A state_filter=( [suspend]="running" [resume]="paused" )
+my_virsh () {
+    # support virsh suspend|resume --all
+    # requires
+    #   - ${state_filter[$action]} hash/dictionary (for --all)
+    #   - virsh_suspend & virsh_resume functions because
+    #     virsh_resume includes an additional action (resync guest system time)
+    local action="$1"; shift  # suspend|resume
+    case "$1" in
+        --all)
+            shift  # --all
+            local state=${state_filter[$action]}  # running|paused
+            local host  # loop var
+            for host in $(virsh list --state-$state --name); do
+                virsh_$action $host "$@"  # suspend|resume $host
+            done
+            ;;
+        *)
+            virsh_$action "$@"
+            ;;
+    esac
+}
+
+virsh_suspend () {
+    # required to support virsh_$action in function my_virsh
+    virsh suspend "$@"
+}
+
+virsh_resume () {
+    # resync the guest system time on virsh resume
+    # Note: virsh domtime needs qemu-guest-agent installed & running on the guest
+    #   which requires /dev/virtio-ports/org.qemu.guest_agent.0 on the guest too.
+    #   For Ubuntu-16.04+ installation, you may need:
+    #   virt-install --channel unix,target_type=virtio,name=org.qemu.guest_agent.0
+    virsh resume "$@" &&
+        virsh domtime --sync "$@" |sed -e '/^$/d'
+}
+
+### main
+action="$1"; shift
 case "$action" in
-    resume)
-        shift
-        virsh resume "$@" &&
-            exec virsh domtime --sync "$@" |sed -e '/^$/d'
+    suspend|pause|stop)
+        # custom aliases for suspend which may be easier to remember
+        # - pause because 'virsh list' shows paused when suspended
+        # - stop because it's similar to kill -STOP
+        my_virsh suspend "$@"
+        ;;
+    resume|cont|continue)
+        # custom aliases for resume which may be easier to remember
+        # - cont because it's similar to kill -CONT
+        # - continue for those who prefer the full word ;-)
+        my_virsh resume "$@"
         ;;
     console)
-        # separate action to fix terminal afterwards
-        virsh "$@"
+        virsh console "$@"
         # restore terminal size which virsh console incorrectly leaves behind
+        # Note: resize requires the xterm package
         type -P resize >/dev/null &&
-            resize >/dev/null  # ignore COLUMNS/LINES output (package: xterm)
+            resize >/dev/null  # suppress COLUMNS/LINES on stdout
         ;;
     *)
-        exec virsh "$@"
+        exec virsh "$action" "$@"
         ;;
 esac
 
